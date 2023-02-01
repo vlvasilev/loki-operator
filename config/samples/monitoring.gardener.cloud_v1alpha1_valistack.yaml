@@ -1,0 +1,17 @@
+apiVersion: monitoring.gardener.cloud.gardener.cloud/v1alpha1
+kind: ValiStack
+metadata:
+  labels:
+    app.kubernetes.io/name: valistack
+    app.kubernetes.io/instance: valistack-sample
+    app.kubernetes.io/part-of: vali-operator
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: vali-operator
+  name: valistack-sample
+  namespace: logging
+spec:
+  # TODO(user): Add fields here
+  vali:
+    replicas: 1
+    authEnabled: false
+    

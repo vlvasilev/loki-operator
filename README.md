@@ -1,36 +1,94 @@
-# <repo name>
+# loki-operator
+// TODO(user): Add simple overview of use/purpose
 
-[![reuse compliant](https://reuse.software/badge/reuse-compliant.svg)](https://reuse.software/)
+## Description
+// TODO(user): An in-depth paragraph about your project and overview of use
 
-## How to use this repository template
+## Getting Started
+You’ll need a Kubernetes cluster to run against. You can use [KIND](https://sigs.k8s.io/kind) to get a local cluster for testing, or run against a remote cluster.
+**Note:** Your controller will automatically use the current context in your kubeconfig file (i.e. whatever cluster `kubectl cluster-info` shows).
 
-This template repository can be used to seed new git repositories in the gardener github organisation.
+### Running on the cluster
+1. Install Instances of Custom Resources:
 
-- you need to be a [member of the gardener organisation](https://github.com/orgs/gardener/people)
-  in order to be able to create a new private repository
-- [create the new repository](https://docs.github.com/en/free-pro-team@latest/github/creating-cloning-and-archiving-repositories/creating-a-repository-from-a-template)
-  based on this template repository
-- in the files
-  - `.reuse/dep5`
-  - `CODEOWNERS`
-  - `README.md`
-- replace the following placeholders
-  - `<repo name>`: name of the new repository
-  - `<maintainer team>`: name of the github team in [gardener teams](https://github.com/orgs/gardener/teams)
-    defining maintainers of the new repository.
-    If several repositories share a common topic and the same
-    set of maintainers they can share a common maintainer team
-- set the repository description in the "About" section of your repository
-- describe the new component in additional sections in this `README.md`
-- any contributions to the new repository must follow the rules in the 
-  [contributor guide](https://github.com/gardener/documentation/blob/master/CONTRIBUTING.md)
-- remove this section from this `README.md`
-- ask [@msohn](https://github.com/orgs/gardener/people/msohn) or another
-  [owner of the gardener github organisation](https://github.com/orgs/gardener/people?query=role%3Aowner)
-  - to double-check the initial content of this repository
-  - to create the maintainer team for this new repository
-  - to make this repository public
-  - protect at least the master branch requiring mandatory code review by the maintainers defined in CODEOWNERS
-  - grant admin permission to the maintainers team of the new repository defined in CODEOWNERS
+```sh
+kubectl apply -f config/samples/
+```
 
-## UNDER CONSTRUCTION
+2. Build and push your image to the location specified by `IMG`:
+
+```sh
+make docker-build docker-push IMG=<some-registry>/loki-operator:tag
+```
+
+3. Deploy the controller to the cluster with the image specified by `IMG`:
+
+```sh
+make deploy IMG=<some-registry>/loki-operator:tag
+```
+
+### Uninstall CRDs
+To delete the CRDs from the cluster:
+
+```sh
+make uninstall
+```
+
+### Undeploy controller
+UnDeploy the controller from the cluster:
+
+```sh
+make undeploy
+```
+
+## Contributing
+// TODO(user): Add detailed information on how you would like others to contribute to this project
+
+### How it works
+This project aims to follow the Kubernetes [Operator pattern](https://kubernetes.io/docs/concepts/extend-kubernetes/operator/).
+
+It uses [Controllers](https://kubernetes.io/docs/concepts/architecture/controller/),
+which provide a reconcile function responsible for synchronizing resources until the desired state is reached on the cluster.
+
+### Test It Out
+1. Install the CRDs into the cluster:
+
+```sh
+make install
+```
+
+2. Run your controller (this will run in the foreground, so switch to a new terminal if you want to leave it running):
+
+```sh
+make run
+```
+
+**NOTE:** You can also run this in one step by running: `make install run`
+
+### Modifying the API definitions
+If you are editing the API definitions, generate the manifests such as CRs or CRDs using:
+
+```sh
+make manifests
+```
+
+**NOTE:** Run `make --help` for more information on all potential `make` targets
+
+More information can be found via the [Kubebuilder Documentation](https://book.kubebuilder.io/introduction.html)
+
+## License
+
+Copyright 2023.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+
