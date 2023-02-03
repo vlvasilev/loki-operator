@@ -17,6 +17,7 @@ limitations under the License.
 package v1alpha1
 
 import (
+	gardencorev1beta1 "github.com/gardener/gardener/pkg/apis/core/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -58,8 +59,17 @@ type ValiStackSpec struct {
 type ValiStackStatus struct {
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
+	// LastError holds information about the last occurred error during an operation.
+	// +optional
+	LastError *gardencorev1beta1.LastError `json:"lastError,omitempty"`
+	// LastOperation holds information about the last operation on the resource.
+	// +optional
+	LastOperation *gardencorev1beta1.LastOperation `json:"lastOperation,omitempty"`
+	// ObservedGeneration is the most recent generation observed for this resource.
+	ObservedGeneration int64 `json:"observedGeneration,omitempty"`
 }
 
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 //+kubebuilder:object:root=true
 //+kubebuilder:subresource:status
 //+kubebuilder:resource:scope=Namespaced,categories=logging,path=valistacks,shortName=vs

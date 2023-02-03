@@ -3,22 +3,43 @@ package operations
 import (
 	"context"
 	"fmt"
+	"time"
 
+	"github.com/gardener/gardener/pkg/apis/core/v1beta1"
+	"github.com/gardener/gardener/pkg/controllerutils"
 	"github.com/go-logr/logr"
 
 	monitoring1alpha1 "github.com/vlvasilev/loki-operator/api/v1alpha1"
 	manifests "github.com/vlvasilev/loki-operator/pkg/manifests"
 
-	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
+	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
-func Reconcile(ctx context.Context, valistack monitoring1alpha1.ValiStack, k client.Client, s *runtime.Scheme, logger logr.Logger) error {
+const (
+	// FinalizerName is the worker controller finalizer.
+	FinalizerName = "extensions.gardener.cloud/worker"
+)
+
+func Reconcile(ctx context.Context, valistack *monitoring1alpha1.ValiStack, k client.Client, logger logr.Logger, operationType v1beta1.LastOperationType) (reconcile.Result, error) {
 	ll := logger.WithValues("valistack", types.NamespacedName{Namespace: valistack.Namespace, Name: valistack.Name}, "event", "reconcile")
 
-	// Here we will translate the lokiv1beta1.LokiStack options into manifest options
+	if !controllerutil.ContainsFinalizer(valistack, FinalizerName) {
+		ll.Info("Adding finalizer")
+		if err := controllerutils.AddFinalizers(ctx, k, valistack, FinalizerName); err != nil {
+			return reconcile.Result{}, fmt.Errorf("failed to add finalizer: %w", err)
+		}
+	}
+
+	if err := Processing(ctx, k, ll, valistack, operationType, "Reconciling the ValiStack"); err != nil {
+		return reconcile.Result{}, err
+	}
+	ll.Info("Starting the reconciliation of valistack")
+
+	// Here we will translate the valiv1alpha1.ValiStack options into manifest options
 	opts := manifests.Options{
 		Name:      valistack.Name,
 		Namespace: valistack.Namespace,
@@ -29,15 +50,21 @@ func Reconcile(ctx context.Context, valistack monitoring1alpha1.ValiStack, k cli
 	}
 	ll.Info("begin building manifests")
 
-	if optErr := manifests.ApplyDefaultSettings(&opts); optErr != nil {
-		ll.Error(optErr, "failed to conform options to build settings")
-		return optErr
+	if err := manifests.ApplyDefaultSettings(&opts); err != nil {
+		ll.Error(err, "failed to conform options to build settings")
+		return ctrl.Result{
+			Requeue:      true,
+			RequeueAfter: time.Second,
+		}, err
 	}
 
 	objects, err := manifests.BuildAll(&opts)
 	if err != nil {
 		ll.Error(err, "failed to build manifests")
-		return err
+		return ctrl.Result{
+			Requeue:      true,
+			RequeueAfter: time.Second,
+		}, err
 	}
 	ll.Info("manifests built", "count", len(objects))
 
@@ -60,8 +87,15 @@ func Reconcile(ctx context.Context, valistack monitoring1alpha1.ValiStack, k cli
 	}
 
 	if errCount > 0 {
-		return fmt.Errorf("failed to configure valistack resources %s", valistack.Namespace)
+		return ctrl.Result{
+			Requeue:      true,
+			RequeueAfter: time.Second,
+		}, fmt.Errorf("failed to configure valistack resources %s", valistack.Namespace)
 	}
 
-	return nil
+	if err := Success(ctx, k, logger, valistack, operationType, "Successfully reconciled ValiStack"); err != nil {
+		return reconcile.Result{}, err
+	}
+
+	return reconcile.Result{}, nil
 }

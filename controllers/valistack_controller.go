@@ -21,12 +21,15 @@ import (
 	"fmt"
 	"time"
 
+	gardencorev1beta1 "github.com/gardener/gardener/pkg/apis/core/v1beta1"
+	v1beta1helper "github.com/gardener/gardener/pkg/apis/core/v1beta1/helper"
 	"github.com/go-logr/logr"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
+	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	monitoring1alpha1 "github.com/vlvasilev/loki-operator/api/v1alpha1"
 	"github.com/vlvasilev/loki-operator/pkg/operations"
@@ -74,14 +77,19 @@ func (r *ValiStackReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 		}, fmt.Errorf("failed to lookup valistack %s: %w", req.NamespacedName, err)
 	}
 
-	if err := operations.Reconcile(ctx, stack, r.Client, r.Scheme, r.Log); err != nil {
-		return ctrl.Result{
-			Requeue:      true,
-			RequeueAfter: time.Second,
-		}, err
+	operationType := v1beta1helper.ComputeOperationType(stack.ObjectMeta, stack.Status.LastOperation)
+	switch {
+	case shouldSkipOperation(operationType, &stack):
+		return reconcile.Result{}, nil
+	case operationType == gardencorev1beta1.LastOperationTypeMigrate:
+		return operations.Delete(ctx, &stack, r.Client, r.Log)
+	case stack.DeletionTimestamp != nil:
+		return operations.Delete(ctx, &stack, r.Client, r.Log)
+	case operationType == gardencorev1beta1.LastOperationTypeRestore:
+		return operations.Reconcile(ctx, &stack, r.Client, r.Log, operationType)
+	default:
+		return operations.Reconcile(ctx, &stack, r.Client, r.Log, operationType)
 	}
-
-	return ctrl.Result{}, nil
 }
 
 // SetupWithManager sets up the controller with the Manager.
@@ -89,4 +97,16 @@ func (r *ValiStackReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&monitoring1alpha1.ValiStack{}).
 		Complete(r)
+}
+
+// ShouldSkipOperation checks if the current operation should be skipped depending on the lastOperation of the ValiSack object.
+func shouldSkipOperation(operationType gardencorev1beta1.LastOperationType, valistack *monitoring1alpha1.ValiStack) bool {
+	return operationType != gardencorev1beta1.LastOperationTypeMigrate && operationType != gardencorev1beta1.LastOperationTypeRestore && isMigrated(valistack)
+}
+
+// IsMigrated checks if an ValiSack object has been migrated
+func isMigrated(valistack *monitoring1alpha1.ValiStack) bool {
+	return valistack.Status.LastOperation != nil &&
+		valistack.Status.LastOperation.Type == gardencorev1beta1.LastOperationTypeMigrate &&
+		valistack.Status.LastOperation.State == gardencorev1beta1.LastOperationStateSucceeded
 }
