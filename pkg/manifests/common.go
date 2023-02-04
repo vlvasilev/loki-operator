@@ -1,5 +1,11 @@
 package manifests
 
+import "k8s.io/apimachinery/pkg/util/intstr"
+
+var (
+	lokiPortInt = intstr.FromInt(3100)
+)
+
 func lokiConfigMapName(suffix string) string {
 	return "vali-config-" + suffix
 }

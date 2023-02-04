@@ -18,6 +18,7 @@ type Options struct {
 	Namespace         string
 	Vali              ValiOptions
 	Curator           CuratorOptions
+	HVPA              *monitoring1alpha1.HVPASpec
 	ConfigSHA         string
 	PriorityClassName *string
 }

@@ -43,11 +43,31 @@ spec:
                 description: Foo is an example field of ValiStack. Edit valistack_types.go
                   to remove/update
                 type: string
+              hvpa:
+                description: Vali defines the HVPA configuration of the ValiStack
+                properties:
+                  priorityClassName:
+                    description: MaintenanceTimeWindow contains information about
+                      the time window for maintenance operations.
+                    properties:
+                      begin:
+                        description: Begin is the beginning of the time window in
+                          the format HHMMSS+ZONE, e.g. "220000+0100".
+                        type: string
+                      end:
+                        description: End is the end of the time window in the format
+                          HHMMSS+ZONE, e.g. "220000+0100".
+                        type: string
+                    required:
+                    - begin
+                    - end
+                    type: object
+                type: object
               priorityClassName:
                 description: PriorityClassName defines the the ValiStack PriorityClassName
                 type: string
               vali:
-                description: ValiSpec defines the Vali configuration of the ValiStack
+                description: Vali defines the Vali configuration of the ValiStack
                 properties:
                   authEnabled:
                     description: AuthEnabled turns on Multitenancy

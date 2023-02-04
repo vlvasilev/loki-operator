@@ -18,6 +18,7 @@ package v1alpha1
 
 import (
 	gardencorev1beta1 "github.com/gardener/gardener/pkg/apis/core/v1beta1"
+	hvpav1alpha1 "github.com/gardener/hvpa-controller/api/v1alpha1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -33,8 +34,8 @@ type ValiSpec struct {
 }
 
 type HVPASpec struct {
-	// Enabled enables the Vali HVPA
-	Enabled bool `json:"enabled,omitempty"`
+	//MaintenanceTimeWindow contains information about the time window for maintenance operations.
+	MaintenanceTimeWindow hvpav1alpha1.MaintenanceTimeWindow `json:"priorityClassName,omitempty"`
 }
 
 // EventLoggerSpec defines the event logger configuration of the ValiStack
@@ -49,8 +50,10 @@ type ValiStackSpec struct {
 
 	// Foo is an example field of ValiStack. Edit valistack_types.go to remove/update
 	Foo string `json:"foo,omitempty"`
-	// ValiSpec defines the Vali configuration of the ValiStack
+	// Vali defines the Vali configuration of the ValiStack
 	Vali *ValiSpec `json:"vali,omitempty"`
+	// Vali defines the HVPA configuration of the ValiStack
+	HVPA *HVPASpec `json:"hvpa,omitempty"`
 	// PriorityClassName defines the the ValiStack PriorityClassName
 	PriorityClassName *string `json:"priorityClassName,omitempty"`
 }

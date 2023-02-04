@@ -39,6 +39,7 @@ func Delete(ctx context.Context, valistack *monitoring1alpha1.ValiStack, c clien
 		Vali: manifests.ValiOptions{
 			Spec: valistack.Spec.Vali,
 		},
+		HVPA:              valistack.Spec.HVPA.DeepCopy(),
 		PriorityClassName: valistack.Spec.PriorityClassName,
 	}
 	ll.Info("begin deleting manifests")

@@ -20,10 +20,14 @@ func BuildAll(opts *Options) ([]client.Object, error) {
 	}
 
 	monolithValiService := buildMonolithValiService(opts)
+	vpa := buildHVPA(opts)
+	networkPolicies := buildNetworkPolicies(opts)
 
 	res = append(res, cm)
 	res = append(res, monolithValiSts)
 	res = append(res, monolithValiService)
+	res = append(res, vpa)
+	res = append(res, networkPolicies...)
 
 	return res, nil
 }
